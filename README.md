@@ -1,6 +1,6 @@
 # CoMot
 
-CoMot is a research codebase for cross-partition motif recovery and candidate prioritization.
+CoMot is a research codebase for cross-partition motif retrieval under partial graph observability.
 
 This open-source tree contains code, configs, and minimal run scripts only. It does not include datasets, experiment outputs, logs, or generated artifacts.
 
