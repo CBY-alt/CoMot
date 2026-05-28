@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Local data and results
+data/raw/**
+data/processed/**
+outputs/**
+paper/figures/**
+figures/**
+figs/**
+experiment_figures_rework/figures/**
+experiment_figures_rework/tables/**
+
+# Keep placeholder files
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!outputs/.gitkeep
+
+# Logs and generated artifacts
+*.log
+*.tmp
+*.pdf
+*.png
+*.csv
+*.jsonl
+
+# Keep source configs and docs JSON/CSV if explicitly tracked later.
+!configs/**/*.json
+!configs/**/*.yaml
+!configs/**/*.yml
+!requirements.txt
