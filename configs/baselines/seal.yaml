@@ -1,0 +1,8 @@
+baseline:
+  name: seal
+  directed: false
+  debug: true
+  candidate_edge_limit: 5000
+  max_predictions: 1000
+  implementation_status: simplified
+  task_formulation: enclosing_subgraph_link_prediction

@@ -17,16 +17,12 @@ env/
 data/raw/**
 data/processed/**
 outputs/**
-paper/figures/**
-figures/**
-figs/**
-experiment_figures_rework/figures/**
-experiment_figures_rework/tables/**
+results/**
+checkpoints/**
 
 # Keep placeholder files
 !data/raw/.gitkeep
 !data/processed/.gitkeep
-!outputs/.gitkeep
 
 # Logs and generated artifacts
 *.log
@@ -36,8 +32,7 @@ experiment_figures_rework/tables/**
 *.csv
 *.jsonl
 
-# Keep source configs and docs JSON/CSV if explicitly tracked later.
+# Keep source configurations.
 !configs/**/*.json
 !configs/**/*.yaml
 !configs/**/*.yml
-!requirements.txt

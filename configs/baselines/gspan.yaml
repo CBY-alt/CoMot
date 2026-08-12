@@ -1,0 +1,12 @@
+baseline:
+  name: gspan
+  use_external: false
+  tool_path: null
+  command_template: null
+  gspan_input: gspan_input.txt
+  export_max_edges: 100000
+  fallback_max_edges: 50000
+  min_support: 2
+  max_predictions: 1000
+  implementation_status: wrapper_simplified_fallback
+  task_formulation: frequent_subgraph_mining

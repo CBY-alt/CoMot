@@ -1,0 +1,12 @@
+baseline:
+  name: node2vec
+  directed: false
+  embedding_dim: 64
+  walk_length: 10
+  walks_per_node: 2
+  window_size: 5
+  p: 1.0
+  q: 1.0
+  embedding_max_nodes: 20000
+  max_predictions: 1000
+  implementation_status: simplified

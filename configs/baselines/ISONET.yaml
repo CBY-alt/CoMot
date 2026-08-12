@@ -1,0 +1,10 @@
+baseline:
+  name: ISONET
+  directed: false
+  max_predictions: 1000
+  max_neighbors: 24
+  beam_width: 8
+  max_candidate_nodes: 8
+  implementation_status: adapted
+  task_formulation: neural_subgraph_matching_graph_retrieval
+  reference: "ISONET: Interpretable Neural Subgraph Matching for Graph Retrieval"

@@ -1,0 +1,33 @@
+dataset:
+  name: DBLP Collaboration Network
+  dataset_name: dblp
+  raw_dir: data/raw/dblp
+  processed_dir: data/processed/dblp
+  edge_file: com-dblp.ungraph.txt
+  community_file: com-dblp.top5000.cmty.txt
+  graph_type: collaboration
+  directed: false
+  weighted: false
+  has_timestamps: false
+  source: SNAP DBLP Collaboration Network
+  paper: "Graph evolution: Densification and shrinking diameters"
+  citation: leskovec2007graph
+  scenario: "Collaboration network and graph structure evolution"
+
+motifs:
+  motif_size: 4
+  num_queries: 1000
+  motif_types:
+    - triangle
+    - cycle4
+    - star
+    - dense_subgraph
+
+partition:
+  partition_num: 5
+  seed: 42
+  strategy: seeded_random_author_assignment
+
+standard_format:
+  output_dir: data/processed/dblp
+  validation_sample_edges: 500000

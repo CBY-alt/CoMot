@@ -1,0 +1,11 @@
+baseline:
+  name: fanmod
+  directed: false
+  use_external: false
+  tool_path: null
+  command_template: null
+  motif_size: 3
+  max_seed_nodes: 5000
+  max_predictions: 1000
+  implementation_status: wrapper_simplified_fallback
+  task_formulation: motif_mining

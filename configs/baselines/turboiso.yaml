@@ -1,0 +1,10 @@
+baseline:
+  name: turboiso
+  directed: false
+  use_external: false
+  tool_path: null
+  command_template: null
+  timeout: 30
+  max_predictions: 100
+  implementation_status: wrapper_networkx_fallback
+  task_formulation: subgraph_matching

@@ -1,15 +1,202 @@
+import csv
 import json
 import math
+import subprocess
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-from data.standard_graph import StandardGraphDataset, save_predictions
+from evaluation.evaluate import evaluate_predictions
+from methods.base_method import BaseMethod
+from methods.baselines.common import StandardGraphDataset, save_predictions
+
+
+class CoMotMethod(BaseMethod):
+    """CoMot method wrapper for the submitted AMLWorld pipeline."""
+
+    def __init__(self, config: Dict[str, Any], project_root: Path, output_dir: Path, seed: int):
+        super().__init__(config=config, project_root=project_root, output_dir=output_dir, seed=seed)
+        partition_tag = config.get("partition", {}).get("tag", "ctrl_v2_003")
+        self.evidence_dir = self.output_dir / f"semotif_local_evidences_{partition_tag}"
+        self.orchestrator_dir = self.output_dir / f"semotif_orchestrator_{partition_tag}"
+        self.candidate_dir = self.output_dir / f"semotif_candidates_{partition_tag}"
+        self.candidate_eval_dir = self.output_dir / f"semotif_candidate_eval_{partition_tag}"
+        self.reranked_dir = self.output_dir / f"semotif_candidates_{partition_tag}_reranked"
+        self.reranked_eval_dir = self.output_dir / f"semotif_candidates_{partition_tag}_reranked_eval"
+        self.breakdown_dir = self.output_dir / f"semotif_candidates_{partition_tag}_reranked_breakdown"
+
+    def _run(self, args: List[str]) -> None:
+        print("+ " + " ".join(args), flush=True)
+        subprocess.run(args, cwd=self.project_root, check=True)
+
+    def fit(self, dataset: Any) -> Dict[str, Path]:
+        local_cfg = self.config.get("local_encoder", {})
+        orchestrator_cfg = self.config.get("orchestrator", {})
+
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "methods" / "comot_pipeline" / "local_encoder.py"),
+            "--partition_dir",
+            str(dataset.partition_dir),
+            "--output_dir",
+            str(self.evidence_dir),
+            "--k_hop",
+            str(local_cfg.get("k_hop", 2)),
+            "--num_workers",
+            str(local_cfg.get("num_workers", 1)),
+        ])
+
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "methods" / "comot_pipeline" / "orchestrator.py"),
+            "--evidence_dir",
+            str(self.evidence_dir),
+            "--output_dir",
+            str(self.orchestrator_dir),
+            "--threshold",
+            str(orchestrator_cfg.get("threshold", 0.72)),
+            "--max_group_size",
+            str(orchestrator_cfg.get("max_group_size", 5)),
+            "--topk_per_sender",
+            str(orchestrator_cfg.get("topk_per_sender", 1)),
+            "--topk_per_receiver",
+            str(orchestrator_cfg.get("topk_per_receiver", 1)),
+        ])
+        return {"evidence_dir": self.evidence_dir, "orchestrator_dir": self.orchestrator_dir}
+
+    def predict(self, dataset: Any) -> Dict[str, Path]:
+        builder_cfg = self.config.get("candidate_builder", {})
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "methods" / "comot_pipeline" / "candidate_builder.py"),
+            "--orchestrator_dir",
+            str(self.orchestrator_dir),
+            "--output_dir",
+            str(self.candidate_dir),
+            "--chain_min_len",
+            str(builder_cfg.get("chain_min_len", 3)),
+            "--chain_max_len",
+            str(builder_cfg.get("chain_max_len", 10)),
+            "--cycle_min_len",
+            str(builder_cfg.get("cycle_min_len", 2)),
+            "--cycle_max_len",
+            str(builder_cfg.get("cycle_max_len", 8)),
+            "--fan_degree_thr",
+            str(builder_cfg.get("fan_degree_thr", 3)),
+        ])
+
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "methods" / "comot_pipeline" / "candidate_reranker.py"),
+            "--candidate_dir",
+            str(self.candidate_dir),
+            "--output_dir",
+            str(self.reranked_dir),
+        ])
+        return {"candidate_dir": self.candidate_dir, "reranked_dir": self.reranked_dir}
+
+    def evaluate(self, dataset: Any) -> Dict[str, Path]:
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "evaluation" / "candidate_pool.py"),
+            "--candidate_dir",
+            str(self.candidate_dir),
+            "--partition_dir",
+            str(dataset.partition_dir),
+            "--output_dir",
+            str(self.candidate_eval_dir),
+        ])
+
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "evaluation" / "reranked_candidates.py"),
+            "--reranked_csv",
+            str(self.reranked_dir / "candidates_reranked.csv"),
+            "--partition_dir",
+            str(dataset.partition_dir),
+            "--output_dir",
+            str(self.reranked_eval_dir),
+        ])
+
+        self._run([
+            sys.executable,
+            str(self.project_root / "src" / "evaluation" / "motif_breakdown.py"),
+            "--reranked_eval_detail_csv",
+            str(self.reranked_eval_dir / "reranked_eval_detail.csv"),
+            "--partition_dir",
+            str(dataset.partition_dir),
+            "--output_dir",
+            str(self.breakdown_dir),
+        ])
+
+        outputs = {
+            "candidate_eval": self.candidate_eval_dir / "candidate_eval_summary.json",
+            "reranked_eval": self.reranked_eval_dir / "reranked_eval_summary.json",
+            "breakdown": self.breakdown_dir / "reranked_breakdown_summary.json",
+        }
+        standard_outputs = self._evaluate_standard_format(dataset)
+        outputs.update(standard_outputs)
+        return outputs
+
+    def _evaluate_standard_format(self, dataset: Any) -> Dict[str, Path]:
+        standard_dir = getattr(dataset, "standard_dir", self.project_root / "data" / "processed" / "amlworld")
+        ground_truth_path = Path(standard_dir) / "ground_truth.json"
+        reranked_csv = self.reranked_dir / "candidates_reranked.csv"
+        if not ground_truth_path.exists() or not reranked_csv.exists():
+            return {}
+
+        predictions = []
+        with open(reranked_csv, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                predictions.append(
+                    {
+                        "query_id": row.get("candidate_type", "comot"),
+                        "predicted_nodes": [_strip_partition_prefix(node) for node in _parse_json_list(row.get("nodes_json"))],
+                        "predicted_edges": [str(edge_id) for edge_id in _parse_json_list(row.get("tx_ids_json"))],
+                        "score": float(row.get("rerank_score") or row.get("score_mean") or 0.0),
+                        "runtime": 0.0,
+                        "metadata": {
+                            "method": "comot",
+                            "candidate_id": row.get("candidate_id", ""),
+                            "candidate_type": row.get("candidate_type", ""),
+                        },
+                    }
+                )
+
+        with open(ground_truth_path, "r", encoding="utf-8") as f:
+            ground_truth = json.load(f)
+
+        standard_eval_dir = self.output_dir / "standard_eval"
+        prediction_path = standard_eval_dir / "predictions.jsonl"
+        save_predictions(predictions, prediction_path)
+        eval_outputs = evaluate_predictions(predictions, ground_truth, standard_eval_dir)
+        return {
+            "standard_predictions": prediction_path,
+            "standard_eval_detail": eval_outputs["detail"],
+            "standard_eval_summary": eval_outputs["summary"],
+        }
+
+
+def _parse_json_list(value: Any) -> List[Any]:
+    if value in (None, ""):
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def _strip_partition_prefix(node: Any) -> str:
+    text = str(node)
+    return text.split("::", 1)[1] if "::" in text else text
 
 
 def run_comot_standard(dataset_dir: Path, config: Dict[str, Any], output_dir: Path, seed: int) -> Dict[str, Any]:
-    """Run a no-leakage CoMot-style runner on the standard processed dataset format."""
+    """Run CoMot on the standard processed format using the method-facing query view."""
     start = time.perf_counter()
     dataset_name = config.get("_run", {}).get("dataset") or config.get("dataset", {}).get("dataset_name") or Path(dataset_dir).name
     standard_cfg = config.get("comot", {}).get("standard", {})

@@ -1,0 +1,6 @@
+baseline:
+  name: vf2
+  directed: false
+  max_predictions: 100
+  timeout: 30
+  implementation_status: full_networkx_for_explicit_query_graphs

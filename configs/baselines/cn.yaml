@@ -1,0 +1,8 @@
+baseline:
+  name: cn
+  directed: false
+  max_predictions: 1000
+  candidate_radius: 2
+  max_nodes_per_query: 240
+  implementation_status: full_heuristic
+  task_formulation: anchor_constrained_link_prediction

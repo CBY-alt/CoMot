@@ -1,0 +1,5 @@
+baseline:
+  name: aa
+  directed: false
+  max_predictions: 1000
+  implementation_status: full_heuristic

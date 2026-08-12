@@ -53,7 +53,7 @@ FORBIDDEN_FIELD_FRAGMENTS = (
 
 
 def build_method_query_view(query_motifs_path: Any, output_path: Any, edge_map_output_path: Optional[Any] = None) -> Path:
-    """Build an inference-safe method-facing query view from full query motifs."""
+    """Build a method-facing query view excluding evaluation-only GT fields."""
     source = Path(query_motifs_path)
     output = Path(output_path)
     if edge_map_output_path is None:
@@ -98,7 +98,7 @@ def sanitize_query(query: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def sanitize_query_with_edge_map(query: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Return an inference-safe query plus an evaluation-only edge-id map."""
+    """Return a method-facing query plus an evaluation-only edge-id map."""
     if not isinstance(query, dict):
         raise ValueError(f"Query must be a JSON object, got {type(query).__name__}.")
     output: Dict[str, Any] = {}
@@ -235,7 +235,7 @@ def build_for_dataset(dataset: str) -> Path:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build method-facing no-leakage query views.")
+    parser = argparse.ArgumentParser(description="Build method-facing query views excluding evaluation-only GT fields.")
     parser.add_argument("datasets", nargs="+", help="Dataset names, processed dirs, or all.")
     return parser.parse_args()
 

@@ -1,0 +1,9 @@
+baseline:
+  name: graphsage
+  directed: false
+  embedding_dim: 64
+  layers: 2
+  embedding_max_nodes: 20000
+  max_predictions: 1000
+  implementation_status: simplified
+  training: unsupervised mean aggregation with deterministic structural seed features

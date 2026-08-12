@@ -1,0 +1,10 @@
+baseline:
+  name: TPAB
+  directed: false
+  max_predictions: 1000
+  max_neighbors: 28
+  beam_width: 10
+  max_candidate_nodes: 8
+  implementation_status: adapted
+  task_formulation: topology_aware_topk_matching
+  reference: Efficient Pruned Top-K Subgraph Matching with Topology-Aware Bounds

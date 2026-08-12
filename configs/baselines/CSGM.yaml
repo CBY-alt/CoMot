@@ -1,0 +1,16 @@
+baseline:
+  name: CSGM
+  directed: false
+  max_predictions: 180
+  bfs_depth: 2
+  max_frontier: 40
+  max_candidate_nodes: 10
+  max_anchors_per_party: 0
+  amlworld_max_candidate_nodes: 4
+  amlworld_max_anchors_per_party: 1
+  minhash_dim: 16
+  partnership_mode: bilateral
+  min_bilateral_strength: 0.02
+  implementation_status: adapted
+  task_formulation: collaborative_scatter_gather_mining
+  reference: "Towards Collaborative Anti-Money Laundering Among Financial Institutions"

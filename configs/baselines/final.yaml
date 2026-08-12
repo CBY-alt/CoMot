@@ -1,0 +1,8 @@
+baseline:
+  name: final
+  directed: false
+  signature_dim: 16
+  max_nodes_per_partition: 500
+  max_predictions: 1000
+  implementation_status: simplified
+  task_formulation: partition_node_alignment

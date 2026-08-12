@@ -1,0 +1,38 @@
+dataset:
+  name: Web-Google
+  dataset_name: web_google
+  raw_dir: data/raw/web_google
+  processed_dir: data/processed/web_google
+  edge_file: web-Google.txt
+  graph_type: web_hyperlink
+  directed: true
+  weighted: false
+  has_timestamps: false
+  source: SNAP Web-Google
+  paper: "Community structure in large networks: Natural cluster sizes and the absence of large well-defined clusters"
+  citation: leskovec2009community
+  scenario: "Web hyperlink graph and community structure"
+
+sampling:
+  max_nodes: 200000
+  max_edges: 1000000
+  strategy: streaming_edge_prefix_with_caps
+
+motifs:
+  motif_size: 4
+  num_queries: 1000
+  motif_types:
+    - directed_star
+    - directed_chain
+    - directed_cycle
+    - feed_forward
+    - dense_hyperlink_block
+
+partition:
+  partition_num: 5
+  seed: 42
+  strategy: seeded_random_webpage_assignment
+
+standard_format:
+  output_dir: data/processed/web_google
+  validation_sample_edges: 500000

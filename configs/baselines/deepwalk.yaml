@@ -1,0 +1,10 @@
+baseline:
+  name: deepwalk
+  directed: false
+  embedding_dim: 64
+  walk_length: 10
+  walks_per_node: 2
+  window_size: 5
+  embedding_max_nodes: 20000
+  max_predictions: 1000
+  implementation_status: simplified

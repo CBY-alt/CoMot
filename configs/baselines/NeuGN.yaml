@@ -1,0 +1,10 @@
+baseline:
+  name: NeuGN
+  directed: false
+  max_predictions: 1000
+  max_neighbors: 24
+  beam_width: 8
+  max_candidate_nodes: 8
+  implementation_status: adapted
+  task_formulation: learning_assisted_subgraph_matching
+  reference: Neural Graph Navigation for Intelligent Subgraph Matching

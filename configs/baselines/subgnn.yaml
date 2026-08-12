@@ -1,0 +1,8 @@
+baseline:
+  name: subgnn
+  directed: false
+  radius: 1
+  max_seed_nodes: 5000
+  max_predictions: 1000
+  implementation_status: simplified_fallback
+  task_formulation: subgraph_representation_learning

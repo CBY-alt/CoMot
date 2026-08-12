@@ -1,0 +1,9 @@
+baseline:
+  name: HLOT
+  directed: false
+  signature_dim: 16
+  max_nodes_per_partition: 500
+  max_predictions: 1000
+  implementation_status: adapted
+  task_formulation: higher_order_unsupervised_graph_alignment
+  reference: Hypergraph Learning for Unsupervised Graph Alignment via Optimal Transport
