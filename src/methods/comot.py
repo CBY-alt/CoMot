@@ -1,12 +1,11 @@
 import csv
 import json
-import math
 import subprocess
 import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Set, Tuple
 
 from evaluation.evaluate import evaluate_predictions
 from methods.base_method import BaseMethod
@@ -14,11 +13,11 @@ from methods.baselines.common import StandardGraphDataset, save_predictions
 
 
 class CoMotMethod(BaseMethod):
-    """CoMot method wrapper for the submitted AMLWorld pipeline."""
+    """CoMot method wrapper for AMLWorld."""
 
     def __init__(self, config: Dict[str, Any], project_root: Path, output_dir: Path, seed: int):
         super().__init__(config=config, project_root=project_root, output_dir=output_dir, seed=seed)
-        partition_tag = config.get("partition", {}).get("tag", "ctrl_v2_003")
+        partition_tag = config.get("partition", {}).get("tag", "five_party")
         self.evidence_dir = self.output_dir / f"semotif_local_evidences_{partition_tag}"
         self.orchestrator_dir = self.output_dir / f"semotif_orchestrator_{partition_tag}"
         self.candidate_dir = self.output_dir / f"semotif_candidates_{partition_tag}"
@@ -68,6 +67,7 @@ class CoMotMethod(BaseMethod):
 
     def predict(self, dataset: Any) -> Dict[str, Path]:
         builder_cfg = self.config.get("candidate_builder", {})
+        ranking_cfg = self.config.get("comot", {}).get("ranking", {})
         self._run([
             sys.executable,
             str(self.project_root / "src" / "methods" / "comot_pipeline" / "candidate_builder.py"),
@@ -94,6 +94,8 @@ class CoMotMethod(BaseMethod):
             str(self.candidate_dir),
             "--output_dir",
             str(self.reranked_dir),
+            "--stability_weight",
+            str(ranking_cfg.get("stability_weight", -5.0)),
         ])
         return {"candidate_dir": self.candidate_dir, "reranked_dir": self.reranked_dir}
 
@@ -147,10 +149,15 @@ class CoMotMethod(BaseMethod):
         if not ground_truth_path.exists() or not reranked_csv.exists():
             return {}
 
+        prediction_budget = int(
+            self.config.get("evaluation", {}).get("prediction_budget", 1000)
+        )
         predictions = []
         with open(reranked_csv, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            for row in reader:
+            for row_index, row in enumerate(reader):
+                if row_index >= prediction_budget:
+                    break
                 predictions.append(
                     {
                         "query_id": row.get("candidate_type", "comot"),

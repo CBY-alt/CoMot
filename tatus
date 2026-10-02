@@ -1,0 +1,62 @@
+ README.md                                          | 207 [32m+[m[31m----[m
+ configs/amlworld_hi_small.json                     |  11 [32m+[m[31m-[m
+ paper_experiments/__init__.py                      |   0
+ paper_experiments/amlworld_analysis.py             | 119 [32m+++[m
+ paper_experiments/boundary_metrics.py              | 115 [32m+++[m
+ paper_experiments/external_baselines.py            | 353 [32m++++++++[m
+ paper_experiments/graph_scalability.py             | 280 [32m+++++++[m
+ paper_experiments/main_table.py                    |  67 [32m++[m
+ paper_experiments/retrieval_budget.py              | 320 [32m+++++++[m
+ scripts/eval_strict_overlap.py                     | 285 [32m+++++++[m
+ scripts/generate_dataset_construction_stats.py     | 303 [32m+++++++[m
+ scripts/make_paper_tables.sh                       |  38 [32m+[m
+ scripts/preprocess_amlworld.sh                     |   4 [32m+[m[31m-[m
+ src/amlworld_pipeline.py                           | 193 [31m-----[m
+ src/data/amlworld.py                               |   4 [32m+[m[31m-[m
+ src/data/amlworld_partition.py                     |   6 [32m+[m[31m-[m
+ src/data/amlworld_partition_summary.py             |   1 [31m-[m
+ src/data/elliptic_protocol.py                      |   4 [32m+[m[31m-[m
+ src/data/query_view.py                             |   1 [31m-[m
+ src/data/standard_format.py                        |   2 [32m+[m[31m-[m
+ src/data/structural_protocol.py                    |  10 [32m+[m[31m-[m
+ src/evaluation/candidate_pool.py                   |   6 [31m-[m
+ src/evaluation/evaluate.py                         |   6 [32m+[m[31m-[m
+ src/evaluation/metrics.py                          |   8 [32m+[m[31m-[m
+ src/evaluation/motif_breakdown.py                  |   2 [32m+[m[31m-[m
+ src/experiments/__init__.py                        |   1 [32m+[m
+ src/experiments/ablation.py                        | 666 [32m+++++++++++++++[m
+ src/experiments/assembly.py                        | 933 [32m+++++++++++++++++++++[m
+ src/experiments/assembly_helpers.py                | 587 [32m+++++++++++++[m
+ src/experiments/boundary_active.py                 | 328 [32m++++++++[m
+ src/experiments/boundary_common.py                 | 539 [32m++++++++++++[m
+ src/experiments/motif_types.py                     | 352 [32m++++++++[m
+ src/experiments/prioritization.py                  | 476 [32m+++++++++++[m
+ src/experiments/results.py                         | 384 [32m+++++++++[m
+ src/experiments/robustness.py                      | 433 [32m++++++++++[m
+ src/experiments/search_space.py                    | 317 [32m+++++++[m
+ src/methods/baselines/aa.py                        |  36 [31m-[m
+ src/methods/baselines/alignment.py                 | 162 [32m++++[m
+ src/methods/baselines/bright.py                    |  38 [31m-[m
+ src/methods/baselines/deepwalk.py                  |  53 [31m--[m
+ src/methods/baselines/embeddings.py                | 325 [32m+++++++[m
+ src/methods/baselines/final.py                     |  38 [31m-[m
+ src/methods/baselines/graphsage.py                 |  81 [31m--[m
+ src/methods/baselines/gspan.py                     | 119 [31m---[m
+ src/methods/baselines/{cn.py => heuristics.py}     |  44 [32m+[m[31m-[m
+ src/methods/baselines/hlot.py                      |  38 [31m-[m
+ src/methods/baselines/{turboiso.py => matching.py} | 113 [32m++[m[31m-[m
+ src/methods/baselines/{fanmod.py => mining.py}     | 111 [32m+++[m
+ src/methods/baselines/modern_subgraph.py           |   2 [32m+[m[31m-[m
+ src/methods/baselines/node2vec.py                  |  55 [31m--[m
+ src/methods/baselines/regal.py                     |  38 [31m-[m
+ src/methods/baselines/registry.py                  |  20 [32m+[m[31m-[m
+ src/methods/baselines/seal.py                      |  36 [31m-[m
+ src/methods/baselines/subgnn.py                    |  91 [31m--[m
+ src/methods/baselines/vf2.py                       | 119 [31m---[m
+ src/methods/comot.py                               |  17 [32m+[m[31m-[m
+ src/methods/comot_pipeline/candidate_builder.py    |   3 [32m+[m[31m-[m
+ src/methods/comot_pipeline/candidate_reranker.py   |  22 [32m+[m[31m-[m
+ src/methods/comot_pipeline/local_encoder.py        |  42 [32m+[m[31m-[m
+ src/methods/comot_pipeline/orchestrator.py         |   6 [32m+[m[31m-[m
+ src/run.py                                         | 135 [32m+[m[31m--[m
+ 61 files changed, 7772 insertions(+), 1333 deletions(-)

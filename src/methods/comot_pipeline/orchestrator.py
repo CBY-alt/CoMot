@@ -150,7 +150,7 @@ def compute_hypothesis_scores(sender_feat, receiver_feat):
     return scores, best_hypothesis, compat_score
 
 
-class StreamingOrchestratorV5:
+class StreamingOrchestrator:
     def __init__(
         self,
         evidence_dir: str,
@@ -392,14 +392,14 @@ class StreamingOrchestratorV5:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--evidence_dir", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default="semotif_orchestrator_v5")
+    parser.add_argument("--output_dir", type=str, default="semotif_orchestrator")
     parser.add_argument("--threshold", type=float, default=0.72)
     parser.add_argument("--max_group_size", type=int, default=5)
     parser.add_argument("--topk_per_sender", type=int, default=1)
     parser.add_argument("--topk_per_receiver", type=int, default=1)
     args = parser.parse_args()
 
-    orchestrator = StreamingOrchestratorV5(
+    orchestrator = StreamingOrchestrator(
         evidence_dir=args.evidence_dir,
         output_dir=args.output_dir,
         threshold=args.threshold,

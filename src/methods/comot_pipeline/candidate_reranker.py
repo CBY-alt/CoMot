@@ -10,7 +10,7 @@ def safe_log(x: float) -> float:
 
 
 def candidate_type_bonus(cand_type: str) -> float:
-    """Apply the submitted type prior, reducing the dominant fan candidate weight."""
+    """Apply the configured type prior, reducing the dominant fan candidate weight."""
     cand_type = str(cand_type).upper()
     if cand_type == "CHAIN":
         return 0.15
@@ -68,7 +68,10 @@ def compactness_bonus(cand_type: str, num_nodes: int, num_edges: int) -> float:
     return 0.0
 
 
-def rerank_score(row):
+DEFAULT_STABILITY_WEIGHT = -5.0
+
+
+def rerank_score(row, stability_weight: float = DEFAULT_STABILITY_WEIGHT):
     cand_type = str(row["candidate_type"])
     num_nodes = int(row["num_nodes"])
     num_edges = int(row["num_edges"])
@@ -78,7 +81,7 @@ def rerank_score(row):
     # Base term combines mean and minimum compatibility.
     base = 0.60 * score_mean + 0.40 * score_min
 
-    # A smaller mean/min gap indicates greater structural stability.
+    # Signed mean/min-gap feature used by the configured AMLWorld scorer.
     stability = -abs(score_mean - score_min)
 
     # Candidate-type prior.
@@ -102,7 +105,7 @@ def rerank_score(row):
 
     final_score = (
         base
-        + 0.20 * stability
+        + stability_weight * stability
         + type_term
         + 0.10 * compact
         + richness
@@ -126,6 +129,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidate_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, default="reranked_candidates")
+    parser.add_argument(
+        "--stability_weight",
+        type=float,
+        default=DEFAULT_STABILITY_WEIGHT,
+        help="Coefficient of -abs(score_mean-score_min); final paper value is -5.0.",
+    )
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -142,7 +151,9 @@ def main():
         if col not in df.columns:
             raise ValueError(f"Missing required column: {col}")
 
-    df["rerank_score"] = df.apply(rerank_score, axis=1)
+    df["rerank_score"] = df.apply(
+        lambda row: rerank_score(row, stability_weight=args.stability_weight), axis=1
+    )
 
     # Write reranked candidates.
     reranked_df = df.sort_values(
@@ -158,6 +169,7 @@ def main():
         "candidate_type_counts": {
             str(k): int(v) for k, v in reranked_df["candidate_type"].value_counts().to_dict().items()
         },
+        "stability_weight": float(args.stability_weight),
         "output_file": out_fp,
     }
 

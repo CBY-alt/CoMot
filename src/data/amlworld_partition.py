@@ -32,7 +32,7 @@ def build_public_tx_tag(row, time_mode="minute"):
     return "||".join(parts)
 
 
-class ControlledPartitionerV2:
+class AMLWorldPartitioner:
     def __init__(
         self,
         global_dir: str,
@@ -564,7 +564,7 @@ class ControlledPartitionerV2:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_dir", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default="semotif_partitioned_controlled_v2")
+    parser.add_argument("--output_dir", type=str, default="semotif_partitioned")
     parser.add_argument("--num_banks", type=int, default=5)
     parser.add_argument("--min_banks_per_motif", type=int, default=2)
     parser.add_argument("--clean_inter_ratio", type=float, default=0.01)
@@ -574,7 +574,7 @@ def main():
     parser.add_argument("--max_clean_neighbors_to_reassign", type=int, default=3)
     args = parser.parse_args()
 
-    partitioner = ControlledPartitionerV2(
+    partitioner = AMLWorldPartitioner(
         global_dir=args.global_dir,
         output_dir=args.output_dir,
         num_banks=args.num_banks,

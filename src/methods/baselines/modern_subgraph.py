@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Set, Tuple
 
 from methods.base_method import BaseMethod
 from methods.baselines.common import elapsed, node_partition_map, now, prediction, save_predictions

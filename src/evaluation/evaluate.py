@@ -72,9 +72,9 @@ def evaluate_predictions(
     summary = {
         "num_predictions": metrics["efficiency"]["num_candidates"],
         "num_ground_truth": len(ground_truth),
-        "candidate_purity": metrics["legacy_overlap"]["candidate_purity"],
-        "motif_recall": metrics["legacy_overlap"]["motif_recall"],
-        "topk": metrics["legacy_overlap"]["topk"],
+        "candidate_purity": metrics["overlap"]["candidate_purity"],
+        "motif_recall": metrics["overlap"]["motif_recall"],
+        "topk": metrics["overlap"]["topk"],
     }
 
     summary_path = output_dir / "prediction_eval_summary.json"

@@ -1,7 +1,6 @@
 import os
 import json
 import argparse
-from collections import defaultdict
 
 import pandas as pd
 

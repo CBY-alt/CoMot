@@ -227,7 +227,7 @@ def valid_query(query: Dict[str, Any], gt: Dict[str, Any]) -> bool:
     )
 
 
-def old_items(dataset_dir: Path) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]]]:
+def source_items(dataset_dir: Path) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]]]:
     queries = load_json(dataset_dir / "query_motifs.json")
     gt_by_id = {item["query_id"]: item for item in load_json(dataset_dir / "ground_truth.json")}
     return queries, gt_by_id
@@ -251,8 +251,8 @@ def candidate_from_existing(
 
 def make_from_existing(
     dataset_name: str,
-    old_queries: List[Dict[str, Any]],
-    old_gt: List[Dict[str, Any]],
+    source_queries: List[Dict[str, Any]],
+    source_gt: List[Dict[str, Any]],
     target_counts: Dict[str, int],
     edge_lookup: Dict[str, Tuple[str, str]],
     adjacency: Dict[str, Set[str]],
@@ -263,8 +263,8 @@ def make_from_existing(
     gts: List[Dict[str, Any]] = []
     counts: Counter[str] = Counter()
     used_edges: Set[Tuple[str, ...]] = set()
-    query_type_by_id = {str(query["query_id"]): str(query.get("motif_type", "")) for query in old_queries}
-    for item in old_gt:
+    query_type_by_id = {str(query["query_id"]): str(query.get("motif_type", "")) for query in source_queries}
+    for item in source_gt:
         source_type = str(item.get("motif_type") or query_type_by_id.get(str(item.get("query_id")), "") or item.get("query_id") or "")
         # Current repaired files store motif type in query ids, so use explicit prefixes when possible.
         if dataset_name == "dblp":

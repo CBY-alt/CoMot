@@ -1,7 +1,6 @@
 import os
 import json
 import argparse
-from collections import defaultdict
 
 import pandas as pd
 import networkx as nx
@@ -184,7 +183,7 @@ class MotifCandidateBuilder:
         cid = 0
 
         try:
-            all_cycles = list(nx.simple_cycles(G))
+            all_cycles = list(nx.simple_cycles(G, length_bound=self.cycle_max_len))
         except Exception:
             all_cycles = []
 

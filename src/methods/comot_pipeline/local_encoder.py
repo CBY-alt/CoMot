@@ -39,29 +39,16 @@ class LocalEncoder:
         in_adj = defaultdict(list)
         local_nodes = set(df["local_account_id"].unique().tolist())
 
-        # itertuples is substantially faster than iterrows here.
-        for row in df.itertuples(index=False):
-            if row.local_role == "SENDER":
-                src = row.local_account_id
-                dst = row.counterparty_account_masked
+        roles = df["local_role"].to_numpy(copy=False)
+        local = df["local_account_id"].to_numpy(copy=False)
+        remote = df["counterparty_account_masked"].to_numpy(copy=False)
+        for role, local_id, remote_id in zip(roles, local, remote):
+            if role == "SENDER":
+                src, dst = local_id, remote_id
             else:
-                src = row.counterparty_account_masked
-                dst = row.local_account_id
-
-            edge = {
-                "src": src,
-                "dst": dst,
-                "public_tx_tag": row.public_tx_tag,
-                "amount_received": safe_float(row._asdict().get("Amount Received", getattr(row, "_8", 0.0))),
-                "amount_paid": safe_float(row._asdict().get("Amount Paid", getattr(row, "_9", 0.0))),
-                "ts": str(row.Timestamp),
-                "fmt": str(row._asdict().get("Payment Format", getattr(row, "_10", ""))),
-                "recv_ccy": str(row._asdict().get("Receiving Currency", getattr(row, "_11", ""))),
-                "paid_ccy": str(row._asdict().get("Payment Currency", getattr(row, "_12", ""))),
-                "is_inter_partition": bool(row.is_inter_partition),
-            }
-            out_adj[src].append(edge)
-            in_adj[dst].append(edge)
+                src, dst = remote_id, local_id
+            out_adj[src].append(dst)
+            in_adj[dst].append(src)
 
         all_nodes = set(out_adj.keys()) | set(in_adj.keys()) | local_nodes
         return all_nodes, out_adj, in_adj
@@ -82,10 +69,9 @@ class LocalEncoder:
             if depth >= k_hop:
                 continue
 
-            neigh_edges = out_adj.get(cur, []) if direction == "out" else in_adj.get(cur, [])
-            for e in neigh_edges:
-                nxt = e["dst"] if direction == "out" else e["src"]
-                edge_cnt += 1
+            neighbors = out_adj.get(cur, []) if direction == "out" else in_adj.get(cur, [])
+            edge_cnt += len(neighbors)
+            for nxt in neighbors:
                 reached.add(nxt)
                 if nxt not in visited:
                     visited.add(nxt)
@@ -119,7 +105,7 @@ class LocalEncoder:
                 "one_hop_in_nodes": one_hop_in_nodes,
                 "two_hop_in_nodes": two_hop_in_nodes,
                 # Retain edge statistics even though the current feature vector does not
-                # consume them directly, preserving the submitted computation.
+                # consume them directly, preserving the configured computation.
                 "one_hop_out_edges": one_hop_out_edges,
                 "two_hop_out_edges": two_hop_out_edges,
                 "one_hop_in_edges": one_hop_in_edges,
@@ -238,7 +224,7 @@ def _process_one_file(args_tuple):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--partition_dir", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default="semotif_local_evidences_v3")
+    parser.add_argument("--output_dir", type=str, default="semotif_local_evidences")
     parser.add_argument("--k_hop", type=int, default=2)
     parser.add_argument(
         "--num_workers",

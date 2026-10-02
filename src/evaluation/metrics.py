@@ -22,7 +22,7 @@ def transaction_overlap_hits(candidate_tx_ids: Iterable[int], gt_motif_to_txs: D
 
 
 def purity_and_recall(hit_rows: Iterable[Tuple[bool, Iterable[str]]], num_gt_motifs: int) -> Dict[str, float]:
-    """Compute legacy candidate purity and motif recall from hit rows."""
+    """Compute candidate purity and motif recall from hit rows."""
     rows = list(hit_rows)
     if not rows:
         return {"candidate_purity": 0.0, "motif_recall": 0.0}
@@ -153,10 +153,10 @@ def compute_recovery_metrics(
             "memory_usage": memory_usage(predictions),
             "num_candidates": len(pred_rows),
         },
-        "legacy_overlap": {
+        "overlap": {
             "candidate_purity": partial_matches / len(pred_rows) if pred_rows else 0.0,
             "motif_recall": len(recovered_motifs) / len(gt_rows) if gt_rows else 0.0,
-            "topk": legacy_topk(detail_rows, topks, gt_rows),
+            "topk": overlap_topk(detail_rows, topks, gt_rows),
         },
     }
     return metrics, detail_rows
@@ -287,7 +287,7 @@ def average_precision_from_scores(labels: Sequence[int], scores: Sequence[float]
     return precision_sum / positives
 
 
-def legacy_topk(detail_rows: Sequence[Dict[str, Any]], topks: Sequence[int], gt_rows: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+def overlap_topk(detail_rows: Sequence[Dict[str, Any]], topks: Sequence[int], gt_rows: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     output = {}
     for k in topks:
         rows_at_k = detail_rows[:k]

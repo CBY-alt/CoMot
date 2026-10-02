@@ -9,7 +9,7 @@ from data.standard_format import export_amlworld_standard_format
 
 
 class AMLWorldDataset(BaseDataset):
-    """AMLWorld HI-Small dataset wrapper for the submitted pipeline."""
+    """AMLWorld dataset wrapper for the CoMot pipeline."""
 
     def __init__(self, config: Dict[str, Any], project_root: Path, output_dir: Path, seed: int):
         super().__init__(config=config, project_root=project_root, output_dir=output_dir, seed=seed)
@@ -24,7 +24,7 @@ class AMLWorldDataset(BaseDataset):
             os.environ.get("AMLWORLD_PATTERN_PATH", dataset_cfg.get("pattern_path", "data/raw/amlworld/HI-Small_Patterns.txt"))
         )
 
-        self.partition_tag = partition_cfg.get("tag", "ctrl_v2_003")
+        self.partition_tag = partition_cfg.get("tag", "five_party")
         self.global_dir = self.output_dir / "semotif_global"
         self.partition_dir = self.output_dir / f"semotif_partitioned_{self.partition_tag}"
         self.partition_analysis_dir = self.output_dir / f"partition_protocol_analysis_{self.partition_tag}"

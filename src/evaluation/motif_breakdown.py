@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from collections import Counter, defaultdict
+from collections import Counter
 
 import pandas as pd
 

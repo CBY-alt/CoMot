@@ -330,8 +330,8 @@ def repair(dataset_dir: Path, partition_num: int, max_instances: int) -> Dict[st
     backup_once(gt_path)
     backup_once(partitions_path)
 
-    old_gt = json.loads(gt_path.read_text(encoding="utf-8"))
-    before_ratio = cross_ratio(old_gt)
+    source_gt = json.loads(gt_path.read_text(encoding="utf-8"))
+    before_ratio = cross_ratio(source_gt)
 
     nodes = read_nodes(dataset_dir / "nodes.csv")
     time_steps = read_time_steps(dataset_dir / "node_features.csv")

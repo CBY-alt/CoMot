@@ -1,8 +1,6 @@
 import argparse
 import contextlib
-import csv
 import json
-import os
 import shutil
 import sys
 import time
@@ -179,29 +177,19 @@ def run_baseline_method(dataset_name: str, method_name: str, config: Dict[str, A
 
 def run_comot_method(dataset_name: str, config: Dict[str, Any], output_dir: Path, seed: int) -> Dict[str, Any]:
     runner = str(config.get("comot", {}).get("runner", "auto")).lower()
-    if runner not in {"auto", "legacy", "standard"}:
-        raise ValueError(f"Unknown CoMot runner: {runner}. Choose auto, legacy, or standard.")
-    selected = "legacy" if runner == "auto" and dataset_name == "amlworld" else runner
+    if runner not in {"auto", "amlworld", "standard"}:
+        raise ValueError(f"Unknown CoMot runner: {runner}. Choose auto, amlworld, or standard.")
+    selected = "amlworld" if runner == "auto" and dataset_name == "amlworld" else runner
     if selected == "auto":
-        selected = "standard"
-    if selected == "legacy" and dataset_name != "amlworld":
-        if runner == "legacy":
-            print("[run_method] requested legacy CoMot for non-AMLWorld; falling back to standard runner", flush=True)
         selected = "standard"
     if selected == "standard":
         return run_comot_standard_method(dataset_name, config, output_dir, seed)
-    try:
-        return run_comot_legacy_method(dataset_name, config, output_dir, seed)
-    except Exception as exc:
-        if runner != "auto":
-            raise
-        print(f"[run_method] legacy CoMot failed; falling back to standard runner: {exc}", flush=True)
-        return run_comot_standard_method(dataset_name, config, output_dir, seed)
+    return run_comot_amlworld_method(dataset_name, config, output_dir, seed)
 
 
 def run_comot_standard_method(dataset_name: str, config: Dict[str, Any], output_dir: Path, seed: int) -> Dict[str, Any]:
     dataset = StandardGraphDataset(dataset_name=dataset_name, project_root=PROJECT_ROOT, config=config)
-    print(f"[run_method] comot_runner=standard", flush=True)
+    print("[run_method] comot_runner=standard", flush=True)
     print(f"[run_method] method_query_view={dataset.method_queries_path}", flush=True)
     result = run_comot_standard(dataset.dataset_dir, config, output_dir, seed)
     predictions = load_predictions_jsonl(output_dir / "predictions.jsonl")
@@ -210,14 +198,10 @@ def run_comot_standard_method(dataset_name: str, config: Dict[str, Any], output_
     return result
 
 
-def run_comot_legacy_method(dataset_name: str, config: Dict[str, Any], output_dir: Path, seed: int) -> Dict[str, Any]:
+def run_comot_amlworld_method(dataset_name: str, config: Dict[str, Any], output_dir: Path, seed: int) -> Dict[str, Any]:
     if dataset_name != "amlworld":
-        raise ValueError("CoMot legacy pipeline is currently implemented only for AMLWorld.")
-    print("[run_method] comot_runner=legacy", flush=True)
-    if config.get("_run", {}).get("debug"):
-        legacy = find_legacy_comot_reranked()
-        if legacy is not None:
-            return convert_legacy_comot_outputs(legacy, output_dir)
+        raise ValueError("The AMLWorld runner only accepts the AMLWorld dataset.")
+    print("[run_method] comot_runner=amlworld", flush=True)
     dataset = AMLWorldDataset(config=config, project_root=PROJECT_ROOT, output_dir=output_dir, seed=seed)
     method = CoMotMethod(config=config, project_root=PROJECT_ROOT, output_dir=output_dir, seed=seed)
     dataset.export_standard_format()
@@ -227,8 +211,8 @@ def run_comot_legacy_method(dataset_name: str, config: Dict[str, Any], output_di
 
     standard_eval_dir = output_dir / "standard_eval"
     standard_predictions = standard_eval_dir / "predictions.jsonl"
+    # The main-table protocol evaluates the ranked assembled-only prefix.
     predictions = load_predictions_jsonl(standard_predictions) if standard_predictions.exists() else []
-    predictions = augment_amlworld_comot_node_evidence(predictions, config)
     if predictions:
         ground_truth = StandardGraphDataset(dataset_name="amlworld", project_root=PROJECT_ROOT, config=config).load_ground_truth()
         eval_outputs.update(evaluate_predictions(predictions, ground_truth, output_dir))
@@ -240,107 +224,6 @@ def run_comot_legacy_method(dataset_name: str, config: Dict[str, Any], output_di
             if src.exists():
                 shutil.copy2(src, output_dir / name)
     return {"predictions": len(predictions), "outputs": {k: str(v) for k, v in eval_outputs.items()}}
-
-
-def augment_amlworld_comot_node_evidence(predictions: List[Dict[str, Any]], config: Dict[str, Any]) -> List[Dict[str, Any]]:
-    cfg = config.get("comot", {}).get("legacy_node_evidence", {})
-    if not bool(cfg.get("enabled", False)):
-        return predictions
-    dataset_dir = resolve_path(config.get("data", {}).get("dataset_dir", "data/processed/amlworld"))
-    query_path = dataset_dir / "method_queries.json"
-    if not query_path.exists():
-        return predictions
-    queries = json.loads(query_path.read_text(encoding="utf-8"))
-    prefix = int(cfg.get("prefix_queries", 300))
-    max_anchor_nodes = int(cfg.get("max_anchor_nodes", 8))
-    extras: List[Dict[str, Any]] = []
-    for idx, query in enumerate(queries[:prefix]):
-        anchors = [str(node) for node in query.get("anchor_nodes", []) if node is not None][:max_anchor_nodes]
-        if not anchors:
-            continue
-        extras.append(
-            {
-                "query_id": str(query.get("query_id", f"amlworld_anchor_{idx}")),
-                "predicted_nodes": anchors,
-                "predicted_edges": [],
-                "score": 2.0 - idx * 1e-4,
-                "runtime": 0.0,
-                "metadata": {
-                    "method": "comot",
-                    "candidate_type": "amlworld_anchor_node_evidence",
-                    "runner": "comot_legacy",
-                    "source": "method_visible_anchor_nodes",
-                },
-            }
-        )
-    return extras + predictions
-
-
-def find_legacy_comot_reranked() -> Optional[Path]:
-    candidates = [
-        PROJECT_ROOT / "outputs" / "amlworld_hi_small_unified" / "semotif_candidates_ctrl_v2_003_reranked" / "candidates_reranked.csv",
-        PROJECT_ROOT / "outputs" / "amlworld_hi_small" / "semotif_candidates_ctrl_v2_003_reranked" / "candidates_reranked.csv",
-    ]
-    for path in candidates:
-        if path.exists():
-            return path
-    return None
-
-
-def convert_legacy_comot_outputs(reranked_csv: Path, output_dir: Path) -> Dict[str, Any]:
-    predictions = []
-    with open(reranked_csv, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            predictions.append(
-                {
-                    "query_id": row.get("candidate_type", "comot"),
-                    "predicted_nodes": [strip_partition_prefix(node) for node in parse_json_list(row.get("nodes_json"))],
-                    "predicted_edges": [str(edge_id) for edge_id in parse_json_list(row.get("tx_ids_json"))],
-                    "score": safe_float(row.get("rerank_score") or row.get("score_mean") or 0.0),
-                    "runtime": 0.0,
-                    "metadata": {
-                        "method": "comot",
-                        "candidate_id": row.get("candidate_id", ""),
-                        "candidate_type": row.get("candidate_type", ""),
-                        "legacy_source": str(reranked_csv),
-                        "conversion": "legacy_reranked_csv_to_standard_predictions",
-                    },
-                }
-            )
-    ground_truth_path = PROJECT_ROOT / "data" / "processed" / "amlworld" / "ground_truth.json"
-    with open(ground_truth_path, "r", encoding="utf-8") as f:
-        ground_truth = json.load(f)
-    save_predictions(predictions, output_dir / "predictions.jsonl")
-    save_predictions_json(predictions, output_dir)
-    eval_outputs = evaluate_predictions(predictions, ground_truth, output_dir)
-    return {
-        "predictions": len(predictions),
-        "legacy_source": str(reranked_csv),
-        "outputs": {k: str(v) for k, v in eval_outputs.items()},
-    }
-
-
-def parse_json_list(value: Any) -> List[Any]:
-    if value in (None, ""):
-        return []
-    try:
-        parsed = json.loads(value)
-    except json.JSONDecodeError:
-        return []
-    return parsed if isinstance(parsed, list) else []
-
-
-def strip_partition_prefix(node: Any) -> str:
-    text = str(node)
-    return text.split("::", 1)[1] if "::" in text else text
-
-
-def safe_float(value: Any) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return 0.0
 
 
 def run_one(args: argparse.Namespace) -> int:

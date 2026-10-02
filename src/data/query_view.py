@@ -154,7 +154,6 @@ def sanitize_edges(value: Any, start_idx: int = 0) -> Tuple[Any, Dict[str, str],
             edge_idx += 1
         sanitized_edges.append(edge)
     return sanitized_edges, edge_id_map, edge_idx
-    return output
 
 
 def load_method_queries(dataset_dir: Any) -> List[Dict[str, Any]]:

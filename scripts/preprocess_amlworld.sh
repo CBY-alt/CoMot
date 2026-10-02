@@ -28,7 +28,9 @@ fi
 
 mkdir -p "${RUN_DIR}"
 
-"${PYTHON_BIN}" "${PROJECT_ROOT}/src/amlworld_pipeline.py" \
+cd "${PROJECT_ROOT}"
+AMLWORLD_TRANS_PATH="${TRANS_PATH}" AMLWORLD_PATTERN_PATH="${PATTERN_PATH}" \
+"${PYTHON_BIN}" -m src.run \
   --config "${PROJECT_ROOT}/configs/amlworld_hi_small.json" \
   --dataset amlworld \
   --method comot \

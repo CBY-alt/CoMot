@@ -1,7 +1,6 @@
 import os
 import json
 import argparse
-from typing import List, Dict
 
 import pandas as pd
 
@@ -54,11 +53,6 @@ def evaluate_candidates(candidate_df: pd.DataFrame, gt_df: pd.DataFrame):
         row["motif_instance_id"]: set(load_json_list(row["tx_ids_json"]))
         for _, row in gt_df.iterrows()
     }
-    gt_motif_to_type = {
-        row["motif_instance_id"]: row["motif_type"]
-        for _, row in gt_df.iterrows()
-    }
-
     detail_rows = []
     gt_hit_set = set()
 

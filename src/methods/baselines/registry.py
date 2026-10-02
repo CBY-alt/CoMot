@@ -11,24 +11,14 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from methods.base_method import BaseMethod
-from methods.baselines.aa import AdamicAdarBaseline
-from methods.baselines.bright import BrightBaseline
-from methods.baselines.cn import CommonNeighborsBaseline
+from methods.baselines.alignment import BrightBaseline, FinalBaseline, HLOTBaseline, RegalBaseline
 from methods.baselines.common import StandardGraphDataset, load_json_or_yaml
 from methods.baselines.csgm import CSGMBaseline
-from methods.baselines.deepwalk import DeepWalkBaseline
-from methods.baselines.fanmod import FanmodBaseline
-from methods.baselines.final import FinalBaseline
-from methods.baselines.graphsage import GraphSAGEBaseline
-from methods.baselines.gspan import GSpanBaseline
-from methods.baselines.hlot import HLOTBaseline
+from methods.baselines.embeddings import DeepWalkBaseline, GraphSAGEBaseline, Node2VecBaseline, SealBaseline, SubGNNBaseline
+from methods.baselines.heuristics import AdamicAdarBaseline, CommonNeighborsBaseline
+from methods.baselines.matching import TurboISOBaseline, VF2Baseline
+from methods.baselines.mining import FanmodBaseline, GSpanBaseline
 from methods.baselines.modern_subgraph import ISONETBaseline, NeuGNBaseline, TPABBaseline
-from methods.baselines.node2vec import Node2VecBaseline
-from methods.baselines.regal import RegalBaseline
-from methods.baselines.seal import SealBaseline
-from methods.baselines.subgnn import SubGNNBaseline
-from methods.baselines.turboiso import TurboISOBaseline
-from methods.baselines.vf2 import VF2Baseline
 
 
 BASELINES: Dict[str, Type[BaseMethod]] = {
